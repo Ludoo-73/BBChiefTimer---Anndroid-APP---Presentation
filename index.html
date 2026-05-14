@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BBChief Timer — Blackball Chief Timer</title>
+<meta name="description" content="Application Android de chronomètre pour le Blackball. FFB-ready. Entièrement paramétrable.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,600;1,300&family=Barlow+Condensed:wght@300;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c1: #171f1f;
+    --c2: #1e2825;
+    --c3: #686d6a;
+    --c4: #b9bab7;
+    --c5: #3da0ab;
+    --c6: #eaac4f;
+    --c5d: #265f66;
+    --white: #f0f2f0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--c1);
+    color: var(--c4);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: .4;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px 80px;
+    overflow: hidden;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(61,160,171,.18) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    pointer-events: none;
+  }
+
+  .hero-ring {
+    position: absolute;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    border: 1px solid rgba(61,160,171,.12);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -58%);
+    animation: ring-pulse 6s ease-in-out infinite;
+  }
+
+  .hero-ring::before {
+    content: '';
+    position: absolute;
+    inset: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(61,160,171,.08);
+  }
+
+  @keyframes ring-pulse {
+    0%, 100% { opacity: .6; transform: translate(-50%, -58%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -58%) scale(1.02); }
+  }
+
+  .hero-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--c5);
+    background: rgba(61,160,171,.1);
+    border: 1px solid rgba(61,160,171,.25);
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+    position: relative;
+    z-index: 1;
+    animation: fade-up .8s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 14vw, 9rem);
+    line-height: .95;
+    letter-spacing: 2px;
+    color: var(--white);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    animation: fade-up .8s .1s ease both;
+  }
+
+  .hero-title span {
+    color: var(--c5);
+  }
+
+  .hero-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    font-weight: 300;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--c3);
+    margin-top: 12px;
+    position: relative;
+    z-index: 1;
+    animation: fade-up .8s .2s ease both;
+  }
+
+  .hero-tagline {
+    margin-top: 36px;
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    font-weight: 300;
+    color: var(--c4);
+    text-align: center;
+    max-width: 480px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+    animation: fade-up .8s .3s ease both;
+  }
+
+  .hero-tagline strong {
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  .hero-cta {
+    margin-top: 48px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    animation: fade-up .8s .4s ease both;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--c5);
+    color: var(--c1);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: 4px;
+    transition: background .2s, transform .2s;
+  }
+
+  .btn-primary:hover { background: #4db8c4; transform: translateY(-2px); }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    color: var(--c4);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 13px 28px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,.15);
+    transition: border-color .2s, color .2s, transform .2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--c5); color: var(--c5); transform: translateY(-2px); }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    opacity: .3;
+    animation: fade-up .8s .8s ease both, bob 2s 1.5s ease-in-out infinite;
+  }
+
+  .hero-scroll span {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .6rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 100px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--c5);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+
+  .section-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--c3);
+    max-width: 520px;
+    margin-bottom: 56px;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(61,160,171,.2), transparent);
+    margin: 0 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ── MODES GRID ── */
+  .modes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2px;
+  }
+
+  .mode-card {
+    background: rgba(255,255,255,.025);
+    padding: 32px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: background .3s;
+  }
+
+  .mode-card:hover { background: rgba(61,160,171,.06); }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--c5);
+    transform: scaleX(0);
+    transition: transform .3s;
+    transform-origin: left;
+  }
+
+  .mode-card:hover::before { transform: scaleX(1); }
+
+  .mode-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: rgba(61,160,171,.15);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .mode-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  .mode-desc {
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--c3);
+  }
+
+  /* ── FEATURES ── */
+  .features-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px 80px;
+    align-items: start;
+  }
+
+  @media (max-width: 700px) {
+    .features-layout { grid-template-columns: 1fr; gap: 48px; }
+  }
+
+  .feature-item {
+    display: flex;
+    gap: 18px;
+  }
+
+  .feature-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: rgba(61,160,171,.1);
+    border: 1px solid rgba(61,160,171,.2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c5);
+    margin-top: 2px;
+  }
+
+  .feature-icon svg { width: 16px; height: 16px; fill: currentColor; }
+
+  .feature-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .feature-desc {
+    font-size: .875rem;
+    line-height: 1.65;
+    color: var(--c3);
+  }
+
+  /* ── STATS BLOCK ── */
+  .stats-band {
+    background: rgba(61,160,171,.06);
+    border-top: 1px solid rgba(61,160,171,.12);
+    border-bottom: 1px solid rgba(61,160,171,.12);
+    padding: 60px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stats-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 80px;
+    align-items: center;
+  }
+
+  @media (max-width: 700px) {
+    .stats-inner { grid-template-columns: 1fr; }
+  }
+
+  .stats-text .section-desc { margin-bottom: 0; }
+
+  .stats-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .stats-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: .9rem;
+    line-height: 1.5;
+    color: var(--c4);
+  }
+
+  .stats-list li::before {
+    content: '→';
+    color: var(--c5);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── NOTE CUESCORE ── */
+  .cuescore-note {
+    background: rgba(255,255,255,.02);
+    border-left: 2px solid var(--c6);
+    padding: 20px 24px;
+    border-radius: 0 6px 6px 0;
+    margin-top: 48px;
+  }
+
+  .cuescore-note p {
+    font-size: .875rem;
+    line-height: 1.65;
+    color: var(--c3);
+  }
+
+  .cuescore-note strong { color: var(--c6); font-weight: 600; }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid rgba(255,255,255,.06);
+    padding: 48px 24px;
+    text-align: center;
+  }
+
+  .footer-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .footer-tagline {
+    font-size: .8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--c5);
+    margin-bottom: 32px;
+  }
+
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+
+  .footer-links a {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--c3);
+    text-decoration: none;
+    transition: color .2s;
+  }
+
+  .footer-links a:hover { color: var(--c5); }
+
+  .footer-copy {
+    font-size: .75rem;
+    color: rgba(255,255,255,.15);
+    letter-spacing: 1px;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HERO ══════════════ -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-ring"></div>
+
+  <div class="hero-badge">Android · Blackball · FFB</div>
+
+  <h1 class="hero-title">
+    BBChief<br><span>Timer</span>
+  </h1>
+
+  <p class="hero-sub">Blackball Chief Timer</p>
+
+  <p class="hero-tagline">
+    <strong>FFB-ready.</strong> Entièrement paramétrable.<br>
+    Le chronomètre de terrain pensé pour le Blackball.
+  </p>
+
+  <div class="hero-cta">
+    <a href="https://play.google.com/store/apps/details?id=com.thive_b.bbchieftimer" class="btn-primary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-17c0-.83 1-.99 1.43-.43l15 8.5c.38.22.38.77 0 .99l-15 8.5C3.99 21.49 3 21.32 3 20.5z"/></svg>
+      Google Play
+    </a>
+    <a href="https://github.com/thive-b/bbchieftimer" class="btn-secondary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.69c-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.03A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.12 2.51.35 1.91-1.3 2.75-1.03 2.75-1.03.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+      GitHub
+    </a>
+  </div>
+
+  <div class="hero-scroll">
+    <span>Découvrir</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════ MODES ══════════════ -->
+<section class="reveal">
+  <div class="section-label">Modes de jeu</div>
+  <h2 class="section-title">Quatre modes.<br>Une seule app.</h2>
+  <p class="section-desc">Du chronomètre simple à l'Ultimate UK — chaque mode respecte les règles officielles FFB tout en restant librement paramétrable.</p>
+
+  <div class="modes-grid">
+    <div class="mode-card">
+      <div class="mode-num">01</div>
+      <div class="mode-name">Partie simple</div>
+      <p class="mode-desc">Minutage direct, sans fioritures. Idéal pour l'entraînement ou les parties informelles.</p>
+    </div>
+    <div class="mode-card">
+      <div class="mode-num">02</div>
+      <div class="mode-name">Match</div>
+      <p class="mode-desc">Gestion complète d'un match en plusieurs manches avec suivi du score.</p>
+    </div>
+    <div class="mode-card">
+      <div class="mode-num">03</div>
+      <div class="mode-name">Race to</div>
+      <p class="mode-desc">Premier arrivé au nombre de victoires fixé. Format compétition rapide.</p>
+    </div>
+    <div class="mode-card">
+      <div class="mode-num">04</div>
+      <div class="mode-name">Ultimate UK</div>
+      <p class="mode-desc">Le mode compétition de la FFB, avec ses règles de temps spécifiques intégrées.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════ FEATURES ══════════════ -->
+<section class="reveal">
+  <div class="section-label">Fonctionnalités</div>
+  <h2 class="section-title">Tout ce qu'il faut.<br>Rien de plus.</h2>
+  <p class="section-desc">Conçu pour le terrain, utilisable en une main, lisible dans toutes les conditions d'éclairage.</p>
+
+  <div class="features-layout">
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">Rappel sonore & vibration</div>
+        <p class="feature-desc">Alertes configurables en fin de temps. Ne ratez plus jamais un dépassement.</p>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 17.93V18a1 1 0 0 0-2 0v1.93A8.001 8.001 0 0 1 4.07 13H6a1 1 0 0 0 0-2H4.07A8.001 8.001 0 0 1 11 4.07V6a1 1 0 0 0 2 0V4.07A8.001 8.001 0 0 1 19.93 11H18a1 1 0 0 0 0 2h1.93A8.001 8.001 0 0 1 13 19.93z"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">Temps paramétrables</div>
+        <p class="feature-desc">Durées de tir, de manche, extensions — tout est ajustable selon vos besoins.</p>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">Historique détaillé</div>
+        <p class="feature-desc">Toutes vos parties enregistrées — date, mode, durée, résultat, joueurs.</p>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.5-2.33 6.79-5 7.93-2.67-1.14-5-4.43-5-7.93V7.18L12 5z"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">Gestion de la casse</div>
+        <p class="feature-desc">Attribution, alternance, casse ferme et reprise ferme — conforme aux règles FFB.</p>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">Lancement rapide</div>
+        <p class="feature-desc">Écran Rencontres avec vos derniers duels — une partie en deux taps.</p>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      </div>
+      <div>
+        <div class="feature-title">Aucune donnée collectée</div>
+        <p class="feature-desc">Pas de compte, pas de publicité, pas de télémétrie. Tout reste sur l'appareil.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════ JOUEURS ══════════════ -->
+<div class="stats-band reveal">
+  <div class="stats-inner">
+    <div class="stats-text">
+      <div class="section-label">Suivi des joueurs ou équipes</div>
+      <h2 class="section-title">Vos stats.<br>Votre terrain.</h2>
+      <p class="section-desc">Mémorisez vos adversaires habituels et suivez leur progression partie après partie.</p>
+
+      <div class="cuescore-note">
+        <p><strong>Application autonome</strong> — BBChief Timer est un outil de terrain indépendant, non connecté à Cuescore. Là où Cuescore gère vos compétitions en ligne, BBChief Timer s'occupe de ce qui se passe sur la table. Les deux sont complémentaires.</p>
+      </div>
+    </div>
+
+    <ul class="stats-list">
+      <li>Victoires / Défaites / Taux de réussite</li>
+      <li>Durée moyenne, plus courte et plus longue partie</li>
+      <li>Répartition par mode de jeu (Simple, Match, Race to, Ultimate UK)</li>
+      <li>Adversaire le plus fréquent</li>
+      <li>Casses fermes et reprises fermes</li>
+      <li>Lancement rapide depuis les favoris</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer>
+  <div class="footer-title">BBChief Timer</div>
+  <div class="footer-tagline">FFB-ready · Entièrement paramétrable</div>
+
+  <div class="footer-links">
+    <a href="https://play.google.com/store/apps/details?id=com.thive_b.bbchieftimer">Google Play</a>
+    <a href="https://github.com/thive-b/bbchieftimer">GitHub</a>
+    <a href="privacy.html">Politique de confidentialité</a>
+  </div>
+
+  <p class="footer-copy">© 2026 BBChief Timer · Application Android pour le Blackball</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
